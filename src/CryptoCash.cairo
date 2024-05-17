@@ -1,9 +1,14 @@
+use starknet::ContractAddress;
+
 #[starknet::interface]
-trait <TContractState> {
-    
+pub trait ICryptoCash<TContractState> {
+    fn createNote(ref self:TContractState);
+    fn verify(self:TContractState) -> bool;
+    fn withdraw(ref self:TContractState);
 }
-starket::#[starknet::contract]
+#[starknet::contract]
 mod Cryptocash{
+    use starknet::{ContractAddress,get_caller_address,storage_access::StorageBaseAddress};
     #[storage]
     struct Storage {
 
@@ -13,7 +18,6 @@ mod Cryptocash{
     enum Event {
 
     }
-    #[abi(embed_v0)]
     #[abi(embed_v0)]
     impl Cryptocash of <ContractState>{
         
