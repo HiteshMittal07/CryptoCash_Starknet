@@ -2,7 +2,7 @@ use starknet::ContractAddress;
 #[starknet::interface]
 pub trait ICryptoCash<TContractState> {
     fn createNote(ref self:TContractState,_commitment:felt252,amount:u256);
-    fn verify(self:TContractState) -> bool;
+    fn verify(self:@TContractState) -> bool;
     fn withdraw(ref self:TContractState);
 }
 #[starknet::contract]
@@ -12,6 +12,12 @@ mod Cryptocash{
     struct Storage {
         nullifierHashes: LegacyMap<felt252,bool>,
         commitments: LegacyMap<felt252,commitmentStore>,
+        owner: ContractAddress
+    }
+
+    #[constructor]
+    fn constructor(ref self: ContractState) {
+        
     }
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -21,7 +27,9 @@ mod Cryptocash{
     #[abi(embed_v0)]
     impl Cryptocash of super::ICryptoCash<ContractState>{
         fn createNote(ref self: ContractState, _commitment:felt252, amount:u256) {
-            
+            let value=commitmentStore(true,ContractAddress,_commitment,amount,ContractAddress);
+            self.commitments.write(_commitment,value);
+
         }
     }
     #[derive(Drop,Serde,starknet::Store)]
@@ -29,6 +37,8 @@ mod Cryptocash{
         used: bool,
         owner: ContractAddress,
         commitment: felt252,
+        amount: u256,
+        recipient: felt252,
     }
 
 }
