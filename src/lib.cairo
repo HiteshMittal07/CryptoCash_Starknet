@@ -2,6 +2,7 @@ use starknet::ContractAddress;
 #[starknet::interface]
 pub trait ICryptoCash<TContractState> {
     fn createNote(ref self:TContractState,_commitment:felt252,amount:u256);
+    fn get_owner(self:@TContractState ) -> ContractAddress;
     // fn verify(self:@TContractState) -> bool;
     // fn withdraw(ref self:TContractState);
 }
@@ -30,6 +31,9 @@ mod Cryptocash{
             assert(amount>0, 'Invalid amount');
             let value=commitmentStore{used:true,owner:caller,commitment:_commitment,amount:amount,recipient:caller};
             self.commitments.write(_commitment,value);
+        }
+        fn get_owner(self:@ContractState)-> ContractAddress {
+            self.owner.read()
         }
     }
     #[derive(Drop,Serde,starknet::Store)]
