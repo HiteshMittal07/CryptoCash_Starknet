@@ -2,9 +2,10 @@ use starknet::ContractAddress;
 #[starknet::interface]
 pub trait ICryptoCash<TContractState> {
     fn createNote(ref self:TContractState,_commitment:felt252,amount:u256);
-    fn verify(self:@TContractState) -> bool;
-    fn withdraw(ref self:TContractState);
+    // fn verify(self:@TContractState) -> bool;
+    // fn withdraw(ref self:TContractState);
 }
+
 #[starknet::contract]
 mod Cryptocash{
     use starknet::{ContractAddress,get_caller_address,storage_access::StorageBaseAddress};
@@ -17,19 +18,18 @@ mod Cryptocash{
 
     #[constructor]
     fn constructor(ref self: ContractState) {
-        
-    }
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {
-
+        let caller=get_caller_address();
+        self.owner.write(caller);
     }
     #[abi(embed_v0)]
     impl Cryptocash of super::ICryptoCash<ContractState>{
         fn createNote(ref self: ContractState, _commitment:felt252, amount:u256) {
-            let value=commitmentStore(true,ContractAddress,_commitment,amount,ContractAddress);
+            let caller=get_caller_address();
+            let commitmentStore=self.commitments.read(_commitment);
+            assert(!commitmentStore.used==true, 'you can use this commitment');
+            assert(amount>0, 'Invalid amount');
+            let value=commitmentStore{used:true,owner:caller,commitment:_commitment,amount:amount,recipient:caller};
             self.commitments.write(_commitment,value);
-
         }
     }
     #[derive(Drop,Serde,starknet::Store)]
@@ -38,7 +38,7 @@ mod Cryptocash{
         owner: ContractAddress,
         commitment: felt252,
         amount: u256,
-        recipient: felt252,
+        recipient: ContractAddress,
     }
 
 }
