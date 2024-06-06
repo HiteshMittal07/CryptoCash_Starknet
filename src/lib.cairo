@@ -11,24 +11,32 @@ pub trait ICryptoCash<TContractState> {
 #[starknet::contract]
 mod Cryptocash{
     use starknet::{ContractAddress,get_caller_address,storage_access::StorageBaseAddress};
-    use openzeppelin::token::erc20::ERC20;
+    use openzeppelin::token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
+
+    component!(path: ERC20Component, storage: erc20, event: ERC20Event);
     #[storage]
     struct Storage {
+        #[substorage(v0)]
+        erc20: ERC20Component::Storage,
         nullifierHashes: LegacyMap<felt252,bool>,
         commitments: LegacyMap<felt252,commitmentStore>,
         owner: ContractAddress
+    }
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        #[flat]
+        ERC20Event: ERC20Component::Event
     }
 
     #[constructor]
     fn constructor(ref self: ContractState,initial_supply:u256,recipient:ContractAddress) {
         let caller=get_caller_address();
         self.owner.write(caller);
-        let name = 'Crypto_Cash';
-        let symbol = 'CC';
 
-        let mut unsafe_state = ERC20::unsafe_new_contract_state();
-        ERC20::InternalImpl::initializer(ref unsafe_state, name, symbol);
-        ERC20::InternalImpl::_mint(ref unsafe_state, recipient, initial_supply);
+        self.erc20.initializer("Cryto_cash","CC");
+        self.erc20._mint(recipient, initial_supply);
     }
     #[abi(embed_v0)]
     impl Cryptocash of super::ICryptoCash<ContractState>{
@@ -47,19 +55,9 @@ mod Cryptocash{
             self.commitments.read(_commitment).used
         }
     }
-    #[external(v0)]
-    #[generate_trait]
-    impl Ierc20Impl of Ierc20 {
-        fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
-            let unsafe_state = ERC20::unsafe_new_contract_state();
-            ERC20::ERC20Impl::balance_of(@unsafe_state, account)
-        }
-
-        fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u256) -> bool {
-            let mut unsafe_state = ERC20::unsafe_new_contract_state();
-            ERC20::ERC20Impl::transfer(ref unsafe_state, recipient, amount)
-        }
-    }
+     #[abi(embed_v0)]
+    impl ERC20MixinImpl = ERC20Component::ERC20MixinImpl<ContractState>;
+    impl ERC20InternalImpl = ERC20Component::InternalImpl<ContractState>;
     #[derive(Drop,Serde,starknet::Store)]
     pub struct commitmentStore{
         used: bool,
