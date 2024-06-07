@@ -1,9 +1,9 @@
 use starknet::ContractAddress;
 #[starknet::interface]
 pub trait ICryptoCash<TContractState> {
-    fn createNote(ref self:TContractState,_commitment:felt252,amount:u256);
+    fn createNote(ref self:TContractState,_commitment:u256,amount:u256);
     fn get_owner(self:@TContractState ) -> ContractAddress;
-    fn get_note_status(self:@TContractState, _commitment:felt252) -> bool; 
+    fn get_note_status(self:@TContractState, _commitment:u256) -> bool; 
     // fn verify(self:@TContractState) -> bool;
     // fn withdraw(ref self:TContractState);
 }
@@ -19,7 +19,7 @@ mod Cryptocash{
         #[substorage(v0)]
         erc20: ERC20Component::Storage,
         nullifierHashes: LegacyMap<felt252,bool>,
-        commitments: LegacyMap<felt252,commitmentStore>,
+        commitments: LegacyMap<u256,commitmentStore>,
         owner: ContractAddress
     }
 
@@ -40,18 +40,18 @@ mod Cryptocash{
     }
     #[abi(embed_v0)]
     impl Cryptocash of super::ICryptoCash<ContractState>{
-        fn createNote(ref self: ContractState, _commitment:felt252, amount:u256) {
+        fn createNote(ref self: ContractState, _commitment:u256, amount:u256) {
             let caller=get_caller_address();
             let commitmentStore=self.commitments.read(_commitment);
             assert(!commitmentStore.used==true, 'you can use this commitment');
             assert(amount>0, 'Invalid amount');
-            let value=commitmentStore{used:true,owner:caller,commitment:_commitment,amount:amount,recipient:caller};
+            let value=commitmentStore{used:true,owner:caller,amount:amount,recipient:caller};
             self.commitments.write(_commitment,value);
         }
         fn get_owner(self:@ContractState)-> ContractAddress {
             self.owner.read()
         }
-        fn get_note_status(self:@ContractState, _commitment:felt252)->bool{
+        fn get_note_status(self:@ContractState, _commitment:u256)->bool{
             self.commitments.read(_commitment).used
         }
     }
@@ -76,7 +76,6 @@ mod Cryptocash{
     pub struct commitmentStore{
         used: bool,
         owner: ContractAddress,
-        commitment: felt252,
         amount: u256,
         recipient: ContractAddress,
     }
