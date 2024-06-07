@@ -56,28 +56,27 @@ mod Cryptocash{
         fn get_note_status(self:@ContractState, _commitment:u256)->bool{
             self.commitments.read(_commitment).used
         }
-    }
-    #[abi(embed_v0)]
-    impl ERC20Impl = ERC20Component::ERC20Impl<ContractState>;
-    #[abi(embed_v0)]
-    impl ERC20MetadataImpl = ERC20Component::ERC20MetadataImpl<ContractState>;
-    #[abi(embed_v0)]
-    impl ERC20CamelOnlyImpl = ERC20Component::ERC20CamelOnlyImpl<ContractState>;
-    impl ERC20InternalImpl = ERC20Component::InternalImpl<ContractState>;
+        }
+        #[abi(embed_v0)]
+        impl ERC20Impl = ERC20Component::ERC20Impl<ContractState>;
+        #[abi(embed_v0)]
+        impl ERC20MetadataImpl = ERC20Component::ERC20MetadataImpl<ContractState>;
+        #[abi(embed_v0)]
+        impl ERC20CamelOnlyImpl = ERC20Component::ERC20CamelOnlyImpl<ContractState>;
+        impl ERC20InternalImpl = ERC20Component::InternalImpl<ContractState>;
 
-    // #[generate_trait]
-    // #[abi(per_item)]
-    // impl ExternalImpl of ExternalTrait {
-    //     #[external(v0)]
-    //     fn burn(ref self: ContractState, value: u256) {
-    //         self.erc20._burn(get_caller_address(), value);
-    //     }
+        #[abi(embed_v0)]
+        fn balanceOf(self:@ContractState,account:ContractAddress)->u256{
+            self.erc20.balance_of(account)
+        }
 
-    //     #[external(v0)]
-    //     fn mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
-    //         self.erc20._mint(recipient, amount);
-    //     }
-    // }
+        #[abi(embed_v0)]
+        fn mint(ref self:ContractState,account:ContractAddress,supply:u256){
+            self.erc20._mint(account,supply);
+        }
+
+
+    
     #[derive(Drop,Serde,starknet::Store)]
     pub struct commitmentStore{
         used: bool,
