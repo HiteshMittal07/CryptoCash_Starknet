@@ -11,7 +11,7 @@ pub trait ICryptoCash<TContractState> {
 #[starknet::contract]
 mod Cryptocash{
     use starknet::{ContractAddress,get_caller_address,storage_access::StorageBaseAddress};
-    use openzeppelin::token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
+    use openzeppelin::token::erc20::ERC20Component;
 
     component!(path: ERC20Component, storage: erc20, event: ERC20Event);
     #[storage]
@@ -34,8 +34,10 @@ mod Cryptocash{
     fn constructor(ref self: ContractState,initial_supply:u256) {
         let caller=get_caller_address();
         self.owner.write(caller);
+        let name = 'MyToken';
+        let symbol = 'MTK';
 
-        self.erc20.initializer("Cryto_cash","CC");
+        self.erc20.initializer(name,symbol);
         self.erc20._mint(caller, initial_supply);
     }
     #[abi(embed_v0)]
@@ -55,23 +57,27 @@ mod Cryptocash{
             self.commitments.read(_commitment).used
         }
     }
-     #[abi(embed_v0)]
-    impl ERC20MixinImpl = ERC20Component::ERC20MixinImpl<ContractState>;
+    #[abi(embed_v0)]
+    impl ERC20Impl = ERC20Component::ERC20Impl<ContractState>;
+    #[abi(embed_v0)]
+    impl ERC20MetadataImpl = ERC20Component::ERC20MetadataImpl<ContractState>;
+    #[abi(embed_v0)]
+    impl ERC20CamelOnlyImpl = ERC20Component::ERC20CamelOnlyImpl<ContractState>;
     impl ERC20InternalImpl = ERC20Component::InternalImpl<ContractState>;
 
-    #[generate_trait]
-    #[abi(per_item)]
-    impl ExternalImpl of ExternalTrait {
-        #[external(v0)]
-        fn burn(ref self: ContractState, value: u256) {
-            self.erc20._burn(get_caller_address(), value);
-        }
+    // #[generate_trait]
+    // #[abi(per_item)]
+    // impl ExternalImpl of ExternalTrait {
+    //     #[external(v0)]
+    //     fn burn(ref self: ContractState, value: u256) {
+    //         self.erc20._burn(get_caller_address(), value);
+    //     }
 
-        #[external(v0)]
-        fn mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
-            self.erc20._mint(recipient, amount);
-        }
-    }
+    //     #[external(v0)]
+    //     fn mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
+    //         self.erc20._mint(recipient, amount);
+    //     }
+    // }
     #[derive(Drop,Serde,starknet::Store)]
     pub struct commitmentStore{
         used: bool,
