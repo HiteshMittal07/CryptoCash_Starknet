@@ -1,23 +1,18 @@
-import logo from './logo.svg';
-import './App.css';
-
+import "./App.css";
+import { connect, disconnect } from "@argent/get-starknet";
+import { useState } from "react";
+import { Contract } from "starknet";
 function App() {
+  const [account, setAccount] = useState(null);
+  async function connectWallet() {
+    const connection = await connect();
+    if (connection && connection.isConnected) {
+      setAccount(connection.account);
+    }
+  }
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <button onClick={connectWallet}>Connect</button>
     </div>
   );
 }
