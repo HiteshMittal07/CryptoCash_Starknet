@@ -3,6 +3,8 @@ import { connect, disconnect } from "@argent/get-starknet";
 import { useState } from "react";
 import { Contract, RpcProvider, json } from "starknet";
 import contractABI from "./abis/myAbi.json";
+import random from "./utils/random";
+import { commitmentHash } from "./utils/createHash";
 // import "dotenv/config";
 function App() {
   const [account, setAccount] = useState(null);
@@ -16,6 +18,15 @@ function App() {
   }
   async function createNote() {
     const contract = new Contract(contractABI, Contract_Address, account);
+    const secret = random();
+    console.log(secret);
+    const nullifier = random();
+    const commitment_hash = commitmentHash(
+      parseInt(nullifier),
+      parseInt(secret)
+    );
+    console.log(commitment_hash);
+    const hex_commitment_hash = "0x" + commitment_hash.toString(16);
   }
   async function get_owner() {
     const provider = new RpcProvider({
@@ -31,6 +42,7 @@ function App() {
     <div>
       <button onClick={connectWallet}>Connect</button>
       <button onClick={get_owner}>get_owner</button>
+      <button onClick={createNote}>create</button>
     </div>
   );
 }
