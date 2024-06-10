@@ -1,8 +1,9 @@
 import "./App.css";
 import { connect, disconnect } from "@argent/get-starknet";
 import { useState } from "react";
-import { Contract, RpcProvider } from "starknet";
-import contractABI from "./abis/cryptocash_starknet_Cryptocash.contract_class.json";
+import { Contract, RpcProvider, json } from "starknet";
+import contractABI from "./abis/myAbi.json";
+// import "dotenv/config";
 function App() {
   const [account, setAccount] = useState(null);
   const Contract_Address =
@@ -17,10 +18,14 @@ function App() {
     const contract = new Contract(contractABI, Contract_Address, account);
   }
   async function get_owner() {
-    const provider = new RpcProvider();
+    const provider = new RpcProvider({
+      nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
+    });
+    console.log(provider);
     const contract = new Contract(contractABI, Contract_Address, provider);
+    console.log(contract);
     const owner = await contract.get_owner();
-    console.log(owner);
+    console.log(owner.toString(16));
   }
   return (
     <div>
