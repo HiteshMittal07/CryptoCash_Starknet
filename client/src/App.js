@@ -42,11 +42,22 @@ function App() {
     const owner = await contract.get_owner();
     console.log(owner.toString(16));
   }
+
+  async function get_status() {
+    const provider = new RpcProvider({
+      nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
+    });
+    console.log(provider);
+    const contract = new Contract(contractABI, Contract_Address, provider);
+    const status = await contract.get_note_status({ low: 10000, high: 200 });
+    console.log(status);
+  }
   return (
     <div>
       <button onClick={connectWallet}>Connect</button>
       <button onClick={get_owner}>get_owner</button>
       <button onClick={createNote}>create</button>
+      <button onClick={get_status}>status</button>
     </div>
   );
 }
