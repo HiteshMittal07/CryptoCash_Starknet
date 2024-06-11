@@ -27,6 +27,10 @@ function App() {
     );
     console.log(commitment_hash);
     const hex_commitment_hash = "0x" + commitment_hash.toString(16);
+    const tx = await contract.createNote(
+      { low: 10000, high: 200 },
+      { low: 1000, high: 0 }
+    );
   }
   async function get_owner() {
     const provider = new RpcProvider({
