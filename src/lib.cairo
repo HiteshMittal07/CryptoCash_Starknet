@@ -4,8 +4,8 @@ pub trait ICryptoCash<TContractState> {
     fn createNote(ref self:TContractState,_commitment:u256,amount:u256);
     fn get_owner(self:@TContractState ) -> ContractAddress;
     fn get_note_status(self:@TContractState, _commitment:u256) -> bool; 
-    fn mint(ref self:TContractState,recipient:ContractAddress,amount:u256);
     fn deposit(ref self:TContractState,sender:ContractAddress,amount:u256);
+    fn get_caller(self:@TContractState)->ContractAddress;
     // fn verify(self:@TContractState) -> bool;
     // fn withdraw(ref self:TContractState);
 }
@@ -55,8 +55,8 @@ mod Cryptocash{
         fn get_note_status(self:@ContractState, _commitment:u256)->bool{
             self.commitments.read(_commitment).used
         }
-        fn mint(ref self:ContractState,recipient:ContractAddress,amount:u256){
-            self.erc20._mint(recipient,amount);
+        fn get_caller(self:@ContractState)->ContractAddress{
+            get_caller_address()
         }
         
         fn deposit(ref self:ContractState,sender:ContractAddress,amount:u256){
@@ -64,34 +64,37 @@ mod Cryptocash{
             let result=self.erc20.allowance(sender,contract_address);
             let result2=self.erc20.transfer_from(sender,contract_address,amount);
             assert(result2==true, 'cannot transfer');
-        }
-
-        }
-        #[abi(embed_v0)]
-        impl ERC20Impl = ERC20Component::ERC20Impl<ContractState>;
-        #[abi(embed_v0)]
-        impl ERC20MetadataImpl = ERC20Component::ERC20MetadataImpl<ContractState>;
-        #[abi(embed_v0)]
-        impl ERC20CamelOnlyImpl = ERC20Component::ERC20CamelOnlyImpl<ContractState>;
-        impl ERC20InternalImpl = ERC20Component::InternalImpl<ContractState>;
-        
-        #[abi(embed_v0)]
-        fn balanceOf(self:@ContractState,account:ContractAddress)->u256{
-            self.erc20.balance_of(account)
-        }
-        #[abi(embed_v0)]
-        fn transfer(ref self:ContractState,sender:ContractAddress,recipient:ContractAddress,amount:u256){
-            let result=self.erc20.transfer_from(sender,recipient,amount);
-            assert(result==true, 'cannot transfer');
-        }
-               
-        #[derive(Drop,Serde,starknet::Store)]
-        pub struct commitmentStore{
-            used: bool,
-            owner: ContractAddress,
-            amount: u256,
-            recipient: ContractAddress,
-        }
-    
-
+            }
+            
+            }
+            #[abi(embed_v0)]
+            impl ERC20Impl = ERC20Component::ERC20Impl<ContractState>;
+            #[abi(embed_v0)]
+            impl ERC20MetadataImpl = ERC20Component::ERC20MetadataImpl<ContractState>;
+            #[abi(embed_v0)]
+            impl ERC20CamelOnlyImpl = ERC20Component::ERC20CamelOnlyImpl<ContractState>;
+            impl ERC20InternalImpl = ERC20Component::InternalImpl<ContractState>;
+            
+            #[abi(embed_v0)]
+            fn balanceOf(self:@ContractState,account:ContractAddress)->u256{
+                self.erc20.balance_of(account)
+                }
+                #[external(v0)]
+                fn _transfer(ref self:ContractState,sender:ContractAddress,recipient:ContractAddress,amount:u256){
+                    let result=self.erc20.transfer_from(sender,recipient,amount);
+                    assert(result==true, 'cannot transfer');
+                    }
+                    #[external(v0)]
+                    fn mint(ref self:ContractState,recipient:ContractAddress,amount:u256){
+                        self.erc20._mint(recipient,amount);
+                    }
+                    #[derive(Drop,Serde,starknet::Store)]
+                    pub struct commitmentStore{
+                        used: bool,
+                        owner: ContractAddress,
+                        amount: u256,
+                        recipient: ContractAddress,
+                        }
+                        
+                        
 }
