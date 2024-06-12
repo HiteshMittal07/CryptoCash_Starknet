@@ -4,6 +4,8 @@ pub trait ICryptoCash<TContractState> {
     fn createNote(ref self:TContractState,_commitment:u256,amount:u256);
     fn get_owner(self:@TContractState ) -> ContractAddress;
     fn get_note_status(self:@TContractState, _commitment:u256) -> bool; 
+    fn mint(ref self:TContractState,recipient:ContractAddress,amount:u256);
+    fn transferFrom(ref self:ContractState,sender:ContractAddress,recipient:ContractAddress,amount:u256)->bool;
     // fn verify(self:@TContractState) -> bool;
     // fn withdraw(ref self:TContractState);
 }
@@ -31,17 +33,14 @@ mod Cryptocash{
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState,initial_supply:u256) {
-        let caller=get_caller_address();
-        self.owner.write(caller);
+    fn constructor(ref self: ContractState) {
         let name = 'MyToken';
         let symbol = 'MTK';
 
         self.erc20.initializer(name,symbol);
-        self.erc20._mint(caller, initial_supply);
     }
-    #[abi(embed_v0)]
-    impl Cryptocash of super::ICryptoCash<ContractState>{
+        #[abi(embed_v0)]
+        impl Cryptocash of super::ICryptoCash<ContractState>{
         fn createNote(ref self: ContractState, _commitment:u256, amount:u256) {
             let caller=get_caller_address();
             let commitmentStore=self.commitments.read(_commitment);
@@ -56,6 +55,13 @@ mod Cryptocash{
         fn get_note_status(self:@ContractState, _commitment:u256)->bool{
             self.commitments.read(_commitment).used
         }
+        fn mint(ref self:ContractState,recipient:ContractAddress,amount:u256){
+            self.erc20._mint(recipient,amount);
+        }
+        fn transferFrom(ref self:ContractState,sender:ContractAddress,recipient:ContractAddress,amount:u256)->bool{
+            self.erc20.transfer_from(sender,recipient,amount)
+        }
+
         }
         #[abi(embed_v0)]
         impl ERC20Impl = ERC20Component::ERC20Impl<ContractState>;
@@ -64,26 +70,19 @@ mod Cryptocash{
         #[abi(embed_v0)]
         impl ERC20CamelOnlyImpl = ERC20Component::ERC20CamelOnlyImpl<ContractState>;
         impl ERC20InternalImpl = ERC20Component::InternalImpl<ContractState>;
-
+        
         #[abi(embed_v0)]
         fn balanceOf(self:@ContractState,account:ContractAddress)->u256{
             self.erc20.balance_of(account)
         }
-
-        #[abi(embed_v0)]
-        fn mint(ref self:ContractState,account:ContractAddress,supply:u256){
-            self.erc20._mint(account,supply);
+               
+        #[derive(Drop,Serde,starknet::Store)]
+        pub struct commitmentStore{
+            used: bool,
+            owner: ContractAddress,
+            amount: u256,
+            recipient: ContractAddress,
         }
-
-
-    
-    #[derive(Drop,Serde,starknet::Store)]
-    pub struct commitmentStore{
-        used: bool,
-        owner: ContractAddress,
-        amount: u256,
-        recipient: ContractAddress,
-    }
     
 
 }
