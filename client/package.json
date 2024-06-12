@@ -7,13 +7,6 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "dotenv": "^16.4.5",
-    "fs": "^0.0.1-security",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-scripts": "5.0.1",
-    "starknet": "^5.24.3",
-    "web-vitals": "^2.1.4",
     "big-integer": "^1.6.52",
     "bignumber.js": "^9.1.2",
     "bootstrap": "^5.3.3",
@@ -21,8 +14,15 @@
     "circomlib": "^2.0.5",
     "circomlibjs": "0.0.8",
     "constants-browserify": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "fs": "^0.0.1-security",
     "qrcode": "^1.5.3",
-    "snarkjs": "^0.7.3"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1",
+    "snarkjs": "^0.7.3",
+    "starknet": "^5.24.3",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-app-rewired start",
@@ -58,6 +58,7 @@
     "react-app-rewired": "^2.2.1",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
-    "url": "^0.11.3"
+    "url": "^0.11.3",
+    "vm-browserify": "^1.1.2"
   }
 }
