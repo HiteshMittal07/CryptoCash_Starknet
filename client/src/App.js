@@ -9,7 +9,11 @@ import { commitmentHash } from "./utils/createHash";
 function App() {
   const [account, setAccount] = useState(null);
   const Contract_Address =
-    "0x003300c4a4bba7ff2362fc5e44e5cb8e477577f51bde4b96a3628fb20f5f885c";
+    "0x02819aa999b4d7d69591bce951c6d5b6adb8c4c04a0292158d1628923a48e081";
+  const STRK_token_address =
+    "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+  const ETH_token_address =
+    "0x049D36570D4e46f48e99674bd3fcc84644DdD6b96F7C741B1562B82f9e004dC7";
   async function connectWallet() {
     const connection = await connect();
     if (connection && connection.isConnected) {
@@ -29,6 +33,7 @@ function App() {
     const hex_commitment_hash = "0x" + commitment_hash.toString(16);
     const tx = await contract.createNote(
       { low: 10000, high: 200 },
+      STRK_token_address,
       { low: 1000, high: 0 }
     );
   }
