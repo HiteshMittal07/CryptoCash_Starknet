@@ -37,12 +37,14 @@ trait IERC20<TContractState> {
         use super::IERC20Dispatcher;
         #[storage]
         struct Storage {
+            owner: ContractAddress,
             nullifierHashes: LegacyMap<felt252,bool>,
             commitments: LegacyMap<u256,commitmentStore>,
         }
 
         #[constructor]
-        fn constructor(ref self: ContractState) {
+        fn constructor(ref self: ContractState,_owner:ContractAddress) {
+            self.owner.write(_owner);
         }
         #[abi(embed_v0)]
         impl Cryptocash of super::ICryptoCash<ContractState>{
@@ -62,7 +64,7 @@ trait IERC20<TContractState> {
         fn get_note_status(self:@ContractState, _commitment:u256)->bool{
             self.commitments.read(_commitment).used
         }
-    }
+        }
         
         #[derive(Drop,Serde,starknet::Store)]
         pub struct commitmentStore{
