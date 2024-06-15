@@ -3,8 +3,10 @@ import { connect, disconnect } from "@argent/get-starknet";
 import { useState } from "react";
 import { Contract, RpcProvider, json } from "starknet";
 import contractABI from "./abis/myAbi.json";
+import contract_token_ABI from "./abis/STRKAbi.json";
 import random from "./utils/random";
 import { commitmentHash } from "./utils/createHash";
+import bigInt from "big-integer";
 // import "dotenv/config";
 function App() {
   const [account, setAccount] = useState(null);
@@ -22,6 +24,18 @@ function App() {
   }
   async function createNote() {
     const contract = new Contract(contractABI, Contract_Address, account);
+    const amount = document.querySelector("#amount").value.toString();
+    const contract_Token = new Contract(
+      contract_token_ABI,
+      STRK_token_address,
+      account
+    );
+    try {
+      const tx1 = await contract_Token.approve(Contract_Address, amount);
+    } catch (error) {
+      alert(error);
+      return;
+    }
     const secret = random();
     console.log(secret);
     const nullifier = random();
@@ -30,49 +44,51 @@ function App() {
       parseInt(secret)
     );
     console.log(commitment_hash);
-    const hex_commitment_hash = "0x" + commitment_hash.toString(16);
-    const tx = await contract.createNote(
-      { low: 10000, high: 200 },
-      STRK_token_address,
-      { low: 1000, high: 0 }
-    );
+    const hex_commitment_hash = toHex(commitment_hash);
+    console.log(hex_commitment_hash);
+    try {
+      const tx = await contract.createNote(
+        hex_commitment_hash,
+        STRK_token_address,
+        amount
+      );
+    } catch (error) {
+      alert(error);
+    }
   }
-  async function get_owner() {
-    const provider = new RpcProvider({
-      nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
-    });
-    console.log(provider);
-    const contract = new Contract(contractABI, Contract_Address, provider);
-    console.log(contract);
-    const owner = await contract.get_owner();
-    console.log(owner.toString(16));
+
+  function toHex(number) {
+    // Ensure the input is a BigInt
+    const bigIntNumber = bigInt(number);
+
+    // Convert the BigInt to a hexadecimal string
+    const hexString = bigIntNumber.toString(16);
+
+    // Return the hexadecimal string with '0x' prefix
+    return "0x" + hexString;
   }
 
   async function get_status() {
+    const commitment_hash = document.querySelector("#status").value;
     const provider = new RpcProvider({
       nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
     });
     console.log(provider);
     const contract = new Contract(contractABI, Contract_Address, provider);
-    const status = await contract.get_note_status({ low: 10000, high: 200 });
-    console.log(status);
-  }
-  async function getCaller() {
-    const provider = new RpcProvider({
-      nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
-    });
-    console.log(provider);
-    const contract = new Contract(contractABI, Contract_Address, account);
-    const status = await contract.get_caller();
+    const status = await contract.get_note_status(commitment_hash);
     console.log(status);
   }
   return (
     <div>
       <button onClick={connectWallet}>Connect</button>
-      <button onClick={get_owner}>get_owner</button>
+      <input type="text" id="amount" placeholder="enter the amount of note" />
       <button onClick={createNote}>create</button>
+      <input
+        type="text"
+        id="status"
+        placeholder="enter the commitment here to check the status"
+      />
       <button onClick={get_status}>status</button>
-      <button onClick={getCaller}>caller</button>
     </div>
   );
 }
