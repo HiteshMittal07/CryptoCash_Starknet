@@ -41,7 +41,17 @@ trait IERC20<TContractState> {
             nullifierHashes: LegacyMap<felt252,bool>,
             commitments: LegacyMap<u256,commitmentStore>,
         }
-
+        #[event]
+        #[derive(Drop, starknet::Event)]
+        enum Event {
+            created: created,
+        }
+        #[derive(Drop,Serde,starknet::Event)] 
+        struct created { 
+            #[key]
+            creator : ContractAddress,
+            price   : u256 
+        }
         #[constructor]
         fn constructor(ref self: ContractState,_owner:ContractAddress) {
             self.owner.write(_owner);
@@ -60,6 +70,9 @@ trait IERC20<TContractState> {
             assert(result==true,'transfer failed');
             let value=commitmentStore{used:true,owner:caller,amount:amount,recipient:caller};
             self.commitments.write(_commitment,value);
+
+            //emitting the event
+            self.emit(created{creator:caller,price:amount});
         }
         fn get_note_status(self:@ContractState, _commitment:u256)->bool{
             self.commitments.read(_commitment).used
