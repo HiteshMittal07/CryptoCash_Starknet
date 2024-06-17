@@ -11,7 +11,7 @@ import bigInt from "big-integer";
 function App() {
   const [account, setAccount] = useState(null);
   const Contract_Address =
-    "0x02819aa999b4d7d69591bce951c6d5b6adb8c4c04a0292158d1628923a48e081";
+    "0x03d0bad78db96888349586b0609875ab51863a78c432a54cef8b446486c7067c";
   const STRK_token_address =
     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
   const ETH_token_address =
@@ -24,6 +24,9 @@ function App() {
   }
   async function createNote() {
     const contract = new Contract(contractABI, Contract_Address, account);
+    const provider = new RpcProvider({
+      nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
+    });
     const amount = document.querySelector("#amount").value.toString();
     const contract_Token = new Contract(
       contract_token_ABI,
@@ -32,6 +35,7 @@ function App() {
     );
     try {
       const tx1 = await contract_Token.approve(Contract_Address, amount);
+      console.log(tx1);
     } catch (error) {
       alert(error);
       return;
@@ -52,19 +56,18 @@ function App() {
         STRK_token_address,
         amount
       );
+      const transactionHash = tx.transaction_hash;
+      const txReceipt = await provider.waitForTransaction(transactionHash);
+      const listEvents = txReceipt.events;
+      console.log(listEvents);
     } catch (error) {
       alert(error);
     }
   }
 
   function toHex(number) {
-    // Ensure the input is a BigInt
     const bigIntNumber = bigInt(number);
-
-    // Convert the BigInt to a hexadecimal string
     const hexString = bigIntNumber.toString(16);
-
-    // Return the hexadecimal string with '0x' prefix
     return "0x" + hexString;
   }
 
