@@ -86,8 +86,31 @@
   },
   {
     "type": "event",
+    "name": "cryptocash_starknet::Cryptocash::created",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "creator",
+        "type": "core::starknet::contract_address::ContractAddress",
+        "kind": "key"
+      },
+      {
+        "name": "price",
+        "type": "core::integer::u256",
+        "kind": "data"
+      }
+    ]
+  },
+  {
+    "type": "event",
     "name": "cryptocash_starknet::Cryptocash::Event",
     "kind": "enum",
-    "variants": []
+    "variants": [
+      {
+        "name": "created",
+        "type": "cryptocash_starknet::Cryptocash::created",
+        "kind": "nested"
+      }
+    ]
   }
 ]
