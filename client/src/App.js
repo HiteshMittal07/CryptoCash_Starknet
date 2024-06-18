@@ -17,17 +17,12 @@ function App() {
   const ETH_token_address =
     "0x049D36570D4e46f48e99674bd3fcc84644DdD6b96F7C741B1562B82f9e004dC7";
   async function connectWallet() {
-    const connection = await connect();
+    const connection = await connect({ dappName: "CryptoCash" });
     if (connection && connection.isConnected) {
       setAccount(connection.account);
     }
   }
-  async function createNote() {
-    const contract = new Contract(contractABI, Contract_Address, account);
-    const provider = new RpcProvider({
-      nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
-    });
-    const amount = document.querySelector("#amount").value.toString();
+  async function approve(amount) {
     const contract_Token = new Contract(
       contract_token_ABI,
       STRK_token_address,
@@ -40,6 +35,18 @@ function App() {
       alert(error);
       return;
     }
+  }
+  async function createNote() {
+    const contract = new Contract(contractABI, Contract_Address, account);
+    const provider = new RpcProvider({
+      nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
+    });
+    const amount = document.querySelector("#amount").value.toString();
+    await approve(amount);
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await create(contract, provider, amount);
+  }
+  async function create(contract, provider, amount) {
     const secret = random();
     console.log(secret);
     const nullifier = random();
@@ -57,14 +64,15 @@ function App() {
         amount
       );
       const transactionHash = tx.transaction_hash;
+      console.log(transactionHash);
       const txReceipt = await provider.waitForTransaction(transactionHash);
       const listEvents = txReceipt.events;
-      console.log(listEvents);
+      console.log(listEvents[2].keys[1]);
+      console.log(parseInt(listEvents[2].data[0], 16));
     } catch (error) {
       alert(error);
     }
   }
-
   function toHex(number) {
     const bigIntNumber = bigInt(number);
     const hexString = bigIntNumber.toString(16);
