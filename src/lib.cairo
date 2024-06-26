@@ -102,20 +102,24 @@ mod Cryptocash {
         nullifier1: u128,
         nullifier2: u128,
         commitment1: u128,
-        commitment2: u128
+        commitment2: u128,
+        recipient1: u128,
+        recipient2: u128
     ) {
-        let nullifierhash = u256 { low: nullifier1, high: nullifier2 };
-        let commitmenthash = u256 { low: commitment1, high: commitment2 };
-        self.nullifierHashes.write(nullifierhash, true);
+        let nullifierHash = u256 { low: nullifier1, high: nullifier2 };
+        let commitmentHash = u256 { low: commitment1, high: commitment2 };
+        let recipient = u256 { low: recipient1, high: recipient2 };
+        let contractAddress = get_contract_address();
+        let data = self.commitments.read(commitmentHash);
+        let token = IERC20Dispatcher { contract_address: data.token_address };
+        let status = token.transfer_from(contractAddress, recipient, data.amount);
+        assert(status == true, 'transfer failed');
+        self.nullifierHashes.write(nullifierHash, true);
         self
             .commitments
             .write(
-                commitmenthash,
-                commitmentStore { used: false, ..self.commitments.read(commitmenthash) }
+                commitmentHash,
+                commitmentStore { used: false, ..self.commitments.read(commitmentHash) }
             );
-        let contractAddress = get_contract_address();
-        let token_address = self.commitments.read(commitmentHash);
-        let token = IERC20Dispatcher { contract_address: token_address };
-        let status = token.transfer_from(contractAddress,);
     }
 }
