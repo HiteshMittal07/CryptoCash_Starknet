@@ -1,12 +1,17 @@
+use cairo_verifier::{StarkProof, StarkProofImpl};
 use starknet::ContractAddress;
 #[starknet::interface]
 pub trait ICryptoCash<TContractState> {
-    fn createNote(
-        ref self: TContractState, _commitment: u256, token_address: ContractAddress, amount: u256
+    fn createNote(ref self: TContractState, _commitment: felt252, amount: u256);
+    fn get_note_status(self: @TContractState, _commitment: felt252) -> bool;
+    fn withdraw(
+        ref self: TContractState,
+        proof: StarkProof,
+        commitmentHash: felt252,
+        recipient: ContractAddress,
+        nullifier_hash: felt252
     );
-    fn get_note_status(self: @TContractState, _commitment: u256) -> bool;
 // fn verify(self:@TContractState) -> bool;
-// fn withdraw(ref self:TContractState);
 }
 #[starknet::interface]
 trait IERC20<TContractState> {
@@ -19,7 +24,6 @@ trait IERC20<TContractState> {
     fn total_supply(self: @TContractState) -> u256;
 
     fn balance_of(self: @TContractState, account: ContractAddress) -> u256;
-
     fn allowance(self: @TContractState, owner: ContractAddress, spender: ContractAddress) -> u256;
 
     fn transfer(ref self: TContractState, recipient: ContractAddress, amount: u256) -> bool;
@@ -34,17 +38,21 @@ trait IERC20<TContractState> {
 
 #[starknet::contract]
 mod Cryptocash {
+    use cairo_verifier::stark::StarkProofTrait;
+use cairo_verifier::{StarkProof, StarkProofImpl};
+    use core::hash::{HashStateTrait, HashStateExTrait};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address,
         storage_access::StorageBaseAddress
     };
-    use super::IERC20DispatcherTrait;
     use super::IERC20Dispatcher;
+    use super::IERC20DispatcherTrait;
     #[storage]
     struct Storage {
         owner: ContractAddress,
         nullifierHashes: LegacyMap<felt252, bool>,
-        commitments: LegacyMap<u256, commitmentStore>,
+        commitments: LegacyMap<felt252, commitmentStore>,
+        token_address: ContractAddress
     }
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -65,15 +73,17 @@ mod Cryptocash {
         amount: u256,
     }
     #[constructor]
-    fn constructor(ref self: ContractState, _owner: ContractAddress) {
+    fn constructor(
+        ref self: ContractState, _owner: ContractAddress, token_address: ContractAddress
+    ) {
         self.owner.write(_owner);
+        self.token_address.write(token_address);
     }
     #[abi(embed_v0)]
     impl Cryptocash of super::ICryptoCash<ContractState> {
-        fn createNote(
-            ref self: ContractState, _commitment: u256, token_address: ContractAddress, amount: u256
-        ) {
+        fn createNote(ref self: ContractState, _commitment: felt252, amount: u256) {
             let caller = get_caller_address();
+            let token_address = self.token_address.read();
             let contract_address = get_contract_address();
             let commitmentStore = self.commitments.read(_commitment);
             assert(!commitmentStore.used == true, 'you can use this commitment');
@@ -90,36 +100,25 @@ mod Cryptocash {
             //emitting the event
             self.emit(created { creator: caller, price: amount });
         }
-        fn get_note_status(self: @ContractState, _commitment: u256) -> bool {
+        fn get_note_status(self: @ContractState, _commitment: felt252) -> bool {
             self.commitments.read(_commitment).used
         }
-    }
-
-    #[l1_handler]
-    fn invalidateNoteL1Handler(
-        ref self: ContractState,
-        from_address: felt252,
-        nullifier1: u128,
-        nullifier2: u128,
-        commitment1: u128,
-        commitment2: u128,
-        recipient1: u128,
-        recipient2: u128
-    ) {
-        let nullifierHash = u256 { low: nullifier1, high: nullifier2 };
-        let commitmentHash = u256 { low: commitment1, high: commitment2 };
-        let recipient = u256 { low: recipient1, high: recipient2 };
-        let contractAddress = get_contract_address();
-        let data = self.commitments.read(commitmentHash);
-        let token = IERC20Dispatcher { contract_address: data.token_address };
-        let status = token.transfer_from(contractAddress, recipient, data.amount);
-        assert(status == true, 'transfer failed');
-        self.nullifierHashes.write(nullifierHash, true);
-        self
-            .commitments
-            .write(
-                commitmentHash,
-                commitmentStore { used: false, ..self.commitments.read(commitmentHash) }
-            );
+        fn withdraw(
+            ref self: ContractState,
+            proof: StarkProof,
+            commitmentHash: felt252,
+            recipient: ContractAddress,
+            nullifier_hash: felt252
+        ) {
+            let token_address = self.token_address.read();
+            let commitmentStore = self.commitments.read(commitmentHash);
+            let amount = commitmentStore.amount;
+            assert(self.nullifierHashes.read(nullifier_hash) == false, 'Nullifier already used');
+            // proof.verify(SECURITY_BITS);
+            self.nullifierHashes.write(nullifier_hash, true);
+            let token = IERC20Dispatcher { contract_address: token_address };
+            let status = token.transfer(recipient, amount);
+            assert(status == true, 'transfer failed');
+        }
     }
 }
