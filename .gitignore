@@ -1,4 +1,4 @@
-target
-.env
+src/target
+src/.env
 node_modules
-.starkli-wallets
+src/.starkli-wallets
