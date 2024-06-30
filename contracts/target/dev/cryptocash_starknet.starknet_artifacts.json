@@ -1,0 +1,1 @@
+{"version":1,"contracts":[{"id":"7et9us8ig71gk","package_name":"cryptocash_starknet","contract_name":"Cryptocash","module_path":"cryptocash_starknet::Cryptocash","artifacts":{"sierra":"cryptocash_starknet_Cryptocash.contract_class.json","casm":null}}]}
