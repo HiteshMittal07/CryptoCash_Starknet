@@ -1,124 +1,17 @@
-use cairo_verifier::{StarkProof, StarkProofImpl};
-use starknet::ContractAddress;
-#[starknet::interface]
-pub trait ICryptoCash<TContractState> {
-    fn createNote(ref self: TContractState, _commitment: felt252, amount: u256);
-    fn get_note_status(self: @TContractState, _commitment: felt252) -> bool;
-    fn withdraw(
-        ref self: TContractState,
-        proof: StarkProof,
-        commitmentHash: felt252,
-        recipient: ContractAddress,
-        nullifier_hash: felt252
-    );
-// fn verify(self:@TContractState) -> bool;
-}
-#[starknet::interface]
-trait IERC20<TContractState> {
-    fn name(self: @TContractState) -> felt252;
+use core::result::ResultTrait;
 
-    fn symbol(self: @TContractState) -> felt252;
+mod validate_merkle_proof;
+use validate_merkle_proof::{validate, Input};
+use core::serde::{Serde};
+use cairo_lib::data_structures::mmr::{peaks::Peaks, proof::Proof};
 
-    fn decimals(self: @TContractState) -> u8;
+fn main(input: Array<felt252>) -> Array<felt252> {
+    let mut span = input.span();
 
-    fn total_supply(self: @TContractState) -> u256;
+    let inputs_struct: Input = Serde::deserialize(ref span).expect('Fail to deserialize');
 
-    fn balance_of(self: @TContractState, account: ContractAddress) -> u256;
-    fn allowance(self: @TContractState, owner: ContractAddress, spender: ContractAddress) -> u256;
+    validate(inputs_struct).expect('Invalid proof');
 
-    fn transfer(ref self: TContractState, recipient: ContractAddress, amount: u256) -> bool;
-
-    fn transfer_from(
-        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
-    ) -> bool;
-
-    fn approve(ref self: TContractState, spender: ContractAddress, amount: u256) -> bool;
+    return ArrayTrait::new();
 }
 
-
-#[starknet::contract]
-mod Cryptocash {
-    use cairo_verifier::stark::StarkProofTrait;
-use cairo_verifier::{StarkProof, StarkProofImpl};
-    use core::hash::{HashStateTrait, HashStateExTrait};
-    use starknet::{
-        ContractAddress, get_caller_address, get_contract_address,
-        storage_access::StorageBaseAddress
-    };
-    use super::IERC20Dispatcher;
-    use super::IERC20DispatcherTrait;
-    #[storage]
-    struct Storage {
-        owner: ContractAddress,
-        nullifierHashes: LegacyMap<felt252, bool>,
-        commitments: LegacyMap<felt252, commitmentStore>,
-        token_address: ContractAddress
-    }
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {
-        created: created,
-    }
-    #[derive(Drop, Serde, starknet::Event)]
-    struct created {
-        #[key]
-        creator: ContractAddress,
-        price: u256
-    }
-    #[derive(Drop, Serde, starknet::Store)]
-    pub struct commitmentStore {
-        used: bool,
-        owner: ContractAddress,
-        token_address: ContractAddress,
-        amount: u256,
-    }
-    #[constructor]
-    fn constructor(
-        ref self: ContractState, _owner: ContractAddress, token_address: ContractAddress
-    ) {
-        self.owner.write(_owner);
-        self.token_address.write(token_address);
-    }
-    #[abi(embed_v0)]
-    impl Cryptocash of super::ICryptoCash<ContractState> {
-        fn createNote(ref self: ContractState, _commitment: felt252, amount: u256) {
-            let caller = get_caller_address();
-            let token_address = self.token_address.read();
-            let contract_address = get_contract_address();
-            let commitmentStore = self.commitments.read(_commitment);
-            assert(!commitmentStore.used == true, 'you can use this commitment');
-            assert(amount > 0, 'Invalid amount');
-            let token = IERC20Dispatcher { contract_address: token_address };
-            assert(token.allowance(caller, contract_address) >= amount, 'Approve first');
-            let result = token.transfer_from(caller, contract_address, amount);
-            assert(result == true, 'transfer failed');
-            let value = commitmentStore {
-                used: true, owner: caller, token_address: token_address, amount: amount
-            };
-            self.commitments.write(_commitment, value);
-
-            //emitting the event
-            self.emit(created { creator: caller, price: amount });
-        }
-        fn get_note_status(self: @ContractState, _commitment: felt252) -> bool {
-            self.commitments.read(_commitment).used
-        }
-        fn withdraw(
-            ref self: ContractState,
-            proof: StarkProof,
-            commitmentHash: felt252,
-            recipient: ContractAddress,
-            nullifier_hash: felt252
-        ) {
-            let token_address = self.token_address.read();
-            let commitmentStore = self.commitments.read(commitmentHash);
-            let amount = commitmentStore.amount;
-            assert(self.nullifierHashes.read(nullifier_hash) == false, 'Nullifier already used');
-            // proof.verify(SECURITY_BITS);
-            self.nullifierHashes.write(nullifier_hash, true);
-            let token = IERC20Dispatcher { contract_address: token_address };
-            let status = token.transfer(recipient, amount);
-            assert(status == true, 'transfer failed');
-        }
-    }
-}
