@@ -11,6 +11,7 @@
     "@types/node": "^16.11.65",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.6",
+    "awesome-qr": "^2.1.5-rc.0",
     "big-integer": "^1.6.52",
     "browserify-zlib": "^0.2.0",
     "circomlib": "^2.0.5",
