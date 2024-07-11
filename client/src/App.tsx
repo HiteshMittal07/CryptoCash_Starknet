@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./App.css";
 import { connect } from "@argent/get-starknet";
 import CreateNote from "./components/createNote";
+import { Button } from "flowbite-react";
 function App() {
   const [account, setAccount] = useState();
 
@@ -14,7 +15,7 @@ function App() {
 
   return (
     <div className="App">
-      <button onClick={connectWallet}>Connect Wallet</button>
+      <Button onClick={connectWallet}>Connect Wallet</Button>
       <CreateNote />
     </div>
   );
