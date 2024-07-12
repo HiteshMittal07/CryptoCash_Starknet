@@ -1,8 +1,8 @@
 import { Contract, RpcProvider } from "starknet";
-import contract_token_ABI from "../ABI/STRKAbi.json";
+import contract_token_ABI from "../ABI/ETHAbi.json";
 import contractABI from "../ABI/myAbi.json";
 export const STRK_token_address =
-  "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+  "0x04718f5a0Fc34cC1AF16A1cdee98fFB20C31f5cD61D6Ab07201858f4287c938D";
 export const ETH_token_address =
   "0x049D36570D4e46f48e99674bd3fcc84644DdD6b96F7C741B1562B82f9e004dC7";
 export const Contract_Address =
@@ -28,7 +28,7 @@ export function get_token_contract() {}
 export async function approve(amount: string, account: any) {
   const contract_Token = new Contract(
     contract_token_ABI,
-    STRK_token_address,
+    ETH_token_address,
     account
   );
   try {

@@ -1,5 +1,5 @@
 import React from "react";
-import { approve, getContract, getProvider, toHex } from "../web3/web3";
+import { approve, getContract, getProvider } from "../web3/web3";
 import { rbigint } from "../utils/random";
 import { commitmentHash } from "../utils/createHash";
 
@@ -18,16 +18,14 @@ export default function CreateNote(props: any) {
     console.log(nullifier);
     const commitment_hash = commitmentHash(nullifier, secret);
     console.log(commitment_hash);
-    const hex_commitment_hash = toHex(commitment_hash);
-    console.log(hex_commitment_hash);
     try {
-      const tx = await contract.createNote(hex_commitment_hash, amount);
-      const transactionHash = tx.transaction_hash;
-      console.log(transactionHash);
-      const txReceipt = await provider.waitForTransaction(transactionHash);
-      const listEvents = txReceipt.events;
-      console.log(listEvents[2].keys[1]);
-      console.log(parseInt(listEvents[2].data[0], 16));
+      const tx = await contract.createNote(commitment_hash, amount);
+      // const transactionHash = tx.transaction_hash;
+      // console.log(transactionHash);
+      // const txReceipt = await provider.waitForTransaction(transactionHash);
+      // const listEvents = txReceipt.events;
+      // console.log(listEvents[2].keys[1]);
+      // console.log(parseInt(listEvents[2].data[0], 16));
     } catch (error) {
       alert(error);
     }

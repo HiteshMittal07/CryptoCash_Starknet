@@ -16,7 +16,7 @@ function App() {
   return (
     <div className="App">
       <Button onClick={connectWallet}>Connect Wallet</Button>
-      <CreateNote />
+      <CreateNote account={account} />
     </div>
   );
 }
