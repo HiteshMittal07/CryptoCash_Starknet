@@ -2,7 +2,9 @@ use cairo_verifier::{StarkProof, StarkProofImpl};
 use starknet::ContractAddress;
 #[starknet::interface]
 pub trait ICryptoCash<TContractState> {
-    fn createNote(ref self: TContractState, _commitment: felt252, amount: u256);
+    fn createNote(
+        ref self: TContractState, _commitment: felt252, amount: u256, token_address: ContractAddress
+    );
     fn get_note_status(self: @TContractState, _commitment: felt252) -> bool;
     fn withdraw(
         ref self: TContractState,
@@ -11,7 +13,6 @@ pub trait ICryptoCash<TContractState> {
         recipient: ContractAddress,
         nullifier_hash: felt252
     );
-// fn verify(self:@TContractState) -> bool;
 }
 #[starknet::interface]
 trait IERC20<TContractState> {
@@ -39,7 +40,7 @@ trait IERC20<TContractState> {
 #[starknet::contract]
 mod Cryptocash {
     use cairo_verifier::stark::StarkProofTrait;
-use cairo_verifier::{StarkProof, StarkProofImpl};
+    use cairo_verifier::{StarkProof, StarkProofImpl};
     use core::hash::{HashStateTrait, HashStateExTrait};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address,
@@ -53,7 +54,6 @@ use cairo_verifier::{StarkProof, StarkProofImpl};
         owner: ContractAddress,
         nullifierHashes: LegacyMap<felt252, bool>,
         commitments: LegacyMap<felt252, commitmentStore>,
-        token_address: ContractAddress
     }
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -74,17 +74,18 @@ use cairo_verifier::{StarkProof, StarkProofImpl};
         amount: u256,
     }
     #[constructor]
-    fn constructor(
-        ref self: ContractState, _owner: ContractAddress, token_address: ContractAddress
-    ) {
+    fn constructor(ref self: ContractState, _owner: ContractAddress) {
         self.owner.write(_owner);
-        self.token_address.write(token_address);
     }
     #[abi(embed_v0)]
     impl Cryptocash of super::ICryptoCash<ContractState> {
-        fn createNote(ref self: ContractState, _commitment: felt252, amount: u256) {
+        fn createNote(
+            ref self: ContractState,
+            _commitment: felt252,
+            amount: u256,
+            token_address: ContractAddress
+        ) {
             let caller = get_caller_address();
-            let token_address = self.token_address.read();
             let contract_address = get_contract_address();
             let commitmentStore = self.commitments.read(_commitment);
             assert(!commitmentStore.used == true, 'you can use this commitment');
@@ -98,12 +99,13 @@ use cairo_verifier::{StarkProof, StarkProofImpl};
             };
             self.commitments.write(_commitment, value);
 
-            //emitting the event
             self.emit(created { creator: caller, price: amount });
         }
+        
         fn get_note_status(self: @ContractState, _commitment: felt252) -> bool {
             self.commitments.read(_commitment).used
         }
+
         fn withdraw(
             ref self: ContractState,
             proof: StarkProof,
@@ -111,8 +113,8 @@ use cairo_verifier::{StarkProof, StarkProofImpl};
             recipient: ContractAddress,
             nullifier_hash: felt252
         ) {
-            let token_address = self.token_address.read();
             let commitmentStore = self.commitments.read(commitmentHash);
+            let token_address = commitmentStore.token_address;
             let amount = commitmentStore.amount;
             assert(self.nullifierHashes.read(nullifier_hash) == false, 'Nullifier already used');
             proof.verify(SECURITY_BITS);
