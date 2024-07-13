@@ -1,12 +1,13 @@
 import { Contract, RpcProvider, json } from "starknet";
 import { writeFileSync } from "fs";
+
 const provider = new RpcProvider({
   nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7",
 });
 const addrContract =
-  "0x049D36570D4e46f48e99674bd3fcc84644DdD6b96F7C741B1562B82f9e004dC7";
+  "0x03073f6b8d87d244898203cf5e7e04ac55eda6b029d69b99c36f0431b6cd100e";
 const compressedContract = await provider.getClassAt(addrContract);
 writeFileSync(
-  "./ETHAbi.json",
+  "./myAbi.json",
   json.stringify(compressedContract.abi, undefined, 2)
 );
