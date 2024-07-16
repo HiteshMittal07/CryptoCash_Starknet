@@ -5,6 +5,7 @@ import CreateNote from "./components/createNote";
 import { Button } from "flowbite-react";
 import { CryptoContext } from "./context/cryptoContext";
 import Header from "./components/Header";
+import "react-toastify/dist/ReactToastify.css";
 function App() {
   const [account, setAccount] = useState<any | null>(null);
 
@@ -22,7 +23,7 @@ function App() {
     <CryptoContext.Provider value={contextValue}>
       <div className="App">
         <Header />
-        <CreateNote account={account} />
+        <CreateNote />
       </div>
     </CryptoContext.Provider>
   );
