@@ -34,10 +34,10 @@ const Header = () => {
   }, [primaryWallet]);
 
   return (
-    <Navbar fluid rounded className="bg-transparent shadow-lg text-white">
+    <Navbar fluid rounded className="bg-black shadow-lg text-white">
       <Navbar.Brand href="/">
-        <span className="self-center whitespace-nowrap text-xl font-semibold text-white">
-          ZKTPS
+        <span className="self-center whitespace-nowrap text-xl font-semibold text-white ml-20">
+          Crypto Cash
         </span>
       </Navbar.Brand>
       <div className="flex md:order-2 mr-20">
@@ -53,7 +53,9 @@ const Header = () => {
         <Navbar.Toggle />
       </div>
       <Navbar.Collapse>
-        <Link to="/create">create</Link>
+        <Link to="/create">Create</Link>
+        <Link to="/withdraw">Withdraw</Link>
+        <Link to="/info">Info</Link>
       </Navbar.Collapse>
     </Navbar>
   );

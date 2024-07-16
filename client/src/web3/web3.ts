@@ -26,10 +26,17 @@ export function getProvider() {
   return provider;
 }
 export function get_token_contract(token_address: any, account: any) {
-  if (token_address == ETH_token_address) {
+  if (token_address === ETH_token_address) {
     return new Contract(ETH_token_ABI, ETH_token_address, account);
   } else {
     return new Contract(STRK_token_ABI, STRK_token_address, account);
+  }
+}
+export function get_token_name(address: any) {
+  if (address === ETH_token_address) {
+    return "ETH";
+  } else {
+    return "STRK";
   }
 }
 export async function approve(
